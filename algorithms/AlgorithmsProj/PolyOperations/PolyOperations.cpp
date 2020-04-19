@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <vector>
 #include <utility>
+#include <cmath>
 #include "PolyOperations.h"
 
 using namespace PolyOperations;
@@ -12,13 +13,14 @@ namespace PolyOperations{
   void Polynomial::clean(){
     auto p = this->coeffs_.cbegin();
     while(p != this->coeffs_.cend()){
-      if(p->second == 0.0){
+      if(fabs(p->second) < 1e-9){
         this->coeffs_.erase(p++);
       }
       else{
         ++p;
       }
     }
+    this->max_degree = this->coeffs_.crbegin()->first;
   }
   // getter and setters 
   void Polynomial::setMember(int index, double newCoef){
@@ -31,7 +33,11 @@ namespace PolyOperations{
   }
 
   bool Polynomial::isNull(){
-    return (this->max_degree==0 && this->getMember(0)==1);
+    return (this->max_degree==0 && this->getMember(0)==0);
+  }
+
+  bool Polynomial::isConstant(){
+    return (this->max_degree==0 && this->getMember(0)>0);
   }
 
   // Constructors
@@ -87,11 +93,16 @@ namespace PolyOperations{
     }
     return out;
   }
-
+  // assignment operator
+  void Polynomial::operator=(const Polynomial& q){
+    Polynomial res = q;
+    this->coeffs_ = res.coeffs_;
+    this->clean();
+  }
   // addition
   void Polynomial::add(Polynomial& q){
-    int min_degree = std::min(this->max_degree, q.max_degree);
-    for(int i=0; i<=min_degree; i++){
+    int max_degree = std::max(this->max_degree, q.max_degree);
+    for(int i=0; i<=max_degree; i++){
       this->setMember(i, this->getMember(i)+q.getMember(i));
     }
     this->clean();
@@ -104,9 +115,9 @@ namespace PolyOperations{
   //subtraction
   void Polynomial::subtract(const Polynomial& q){
     Polynomial other = q;
-    int min_degree =  std::min(this->max_degree, other.max_degree);
+    int max_degree =  std::max(this->max_degree, other.max_degree);
 
-    for (int i=0; i<=min_degree; i++){
+    for (int i=0; i<=max_degree; i++){
       this->setMember(i, this->getMember(i) - other.getMember(i));
     }
     this->clean();
@@ -117,9 +128,68 @@ namespace PolyOperations{
     return res;
   }
 
+
   //multiplication
   void Polynomial::multiply(const Polynomial& q){
-    Polynomial res = *this;
-    
+    Polynomial poly = q;
+    Polynomial result;
+    // if the Polynomial is null polynomial, the product is zero
+    if(poly.isNull()){
+      // assign Polynomial to Null polynomial
+      std::map<int, double> zero;
+      this->coeffs_ = zero;
+    }
+    // if polynomial is constant, the product is just multiple of polynomial
+    else if(poly.isConstant()){
+      int max_deg = this->max_degree;
+      for(int i=0; i<=max_degree; i++){
+        this->coeffs_[i] *= poly.getMember(0);
+      }
+    }
+
+    else{
+      for(int i = 0; i <= poly.max_degree; i++){
+        for(int k = 0; k<= this->max_degree; k++){
+          result.coeffs_[i+k] += this->coeffs_[k]*poly.coeffs_[i];
+        }
+      }
+      this->coeffs_ = result.coeffs_;
+    }
+    this->clean();
+  }
+
+  Polynomial operator*(const Polynomial& p, const Polynomial& q){
+    Polynomial res = p;
+    res.multiply(q);
+    return res;
+  }
+
+  // long division, returns vector with dividend and remainder
+
+  std::vector<Polynomial> Polynomial::divide(const Polynomial& q){
+    Polynomial divisor = q;
+    if(divisor.isNull() || this->max_degree<divisor.max_degree){
+      return {};
+    }
+    else{
+      Polynomial quotient;
+      Polynomial remainder = *this;
+      int div_degree = divisor.max_degree;
+      while(!remainder.isNull() && remainder.max_degree>=div_degree){
+        int cur_pow = remainder.max_degree - div_degree;
+        Polynomial temp;
+        double last = remainder.coeffs_.crbegin()->second;
+        quotient.setMember(cur_pow, last);
+        temp.setMember(cur_pow, last);
+        remainder = remainder - divisor*temp;
+        remainder.clean();
+      }
+    std::vector<Polynomial> result;
+    result.push_back(*this);
+    result.push_back(quotient);
+    result.push_back(divisor);
+    result.push_back(remainder);
+    return result;
+    }
   }
 }

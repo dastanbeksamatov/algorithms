@@ -34,22 +34,23 @@ namespace PolyOperations{
     friend bool operator > (const Polynomial& p, const Polynomial& q);
     friend bool operator >= (const Polynomial& p, const Polynomial& q);
     
+    void operator = (const Polynomial& p);
     // printing polynomial
     friend std::ostream& operator <<(std::ostream &out, const Polynomial& p);
 
     // arithmetical methods
     void add(Polynomial& q);
     void subtract(const Polynomial& q);
-    void divide(const Polynomial& q);
+    std::vector<Polynomial> divide(const Polynomial& q);
     void multiply(const Polynomial& q);
 
     // utility functions
     int getMember(int index);
     void setMember(int index, double newCoef);
-    bool isConstant();
     bool isNegative();
     void clean();
     bool isNull();
+    bool isConstant();
   };
 }
 
