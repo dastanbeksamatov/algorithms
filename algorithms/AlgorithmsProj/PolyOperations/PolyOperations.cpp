@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 #include <vector>
+#include <utility>
 #include "PolyOperations.h"
 
 using namespace PolyOperations;
@@ -11,7 +12,7 @@ namespace PolyOperations{
   void Polynomial::clean(){
     auto p = this->coeffs_.cbegin();
     while(p != this->coeffs_.cend()){
-      if(p->second == 0){
+      if(p->second == 0.0){
         this->coeffs_.erase(p++);
       }
       else{
@@ -20,13 +21,17 @@ namespace PolyOperations{
     }
   }
   // getter and setters 
-  void Polynomial::setMember(int index, int coefficient){
-    this->coeffs_[index] = coefficient;
+  void Polynomial::setMember(int index, double newCoef){
+    this->coeffs_[index] = newCoef;
     this->clean();
   }
   //
   int Polynomial::getMember(int index){
-    return this->coeffs_[index];
+    return this->coeffs_.find(index)->second;
+  }
+
+  bool Polynomial::isNull(){
+    return (this->max_degree==0 && this->getMember(0)==1);
   }
 
   // Constructors
@@ -34,32 +39,87 @@ namespace PolyOperations{
     this->coeffs_ = { };
   };
 
-  Polynomial::Polynomial(std::vector<int> coefs){
+  Polynomial::Polynomial(std::vector<double> coefs){
     for (int i = 0; i<coefs.size(); i++){
       this->coeffs_[i] = coefs[i];
     }
-    this->max_degree = this->coeffs_.rbegin()->first;
+    this->max_degree = this->coeffs_.crbegin()->first;
+    this->clean();
   }
+
   // overloaded operators
   std::ostream& operator<<(std::ostream& out, const Polynomial& p){
-    auto i = p.coeffs_.cbegin();
-    int deg = p.max_degree + 1;
-    while(i!=p.coeffs_.cend()){
-      if(i->second==1){
-        out<<"*x^"<<deg<<"+";
+    // print Polynomial object
+    Polynomial t = p;
+    if(t.isNull()){
+      return out<<"Null Polynomial";
+    }
+    bool firstCoeff = true;
+    auto i = p.coeffs_.crbegin();
+    std::string sign = "";
+    while(i!=p.coeffs_.crend()){
+      int power = i->first;
+      double cur = i->second;
+      if(cur>0){
+        out<<sign;
       }
-      else if(i->second!=0){
-        out<<i->second<<"*x^"<<deg<<"+";
+      else{
+        out<<"-";
+        cur = -cur;
       }
-      deg-=1;
+      if(cur!=1){
+        out<<cur;
+        if(power>0){
+          out<<"*";
+        }
+      }
+      if(cur == 1 && power==0){
+        out<<cur;
+      }
+      if(power>0){
+        out<<"x";
+        if(power>1){
+          out<<"^"<<power;
+        }
+      }
+      sign = "+";
       ++i;
     }
     return out;
   }
 
   // addition
-  Polynomial operator+(const Polynomial& p, const Polynomial& q){
+  void Polynomial::add(Polynomial& q){
+    int min_degree = std::min(this->max_degree, q.max_degree);
+    for(int i=0; i<=min_degree; i++){
+      this->setMember(i, this->getMember(i)+q.getMember(i));
+    }
+    this->clean();
+  }
+  Polynomial operator+(Polynomial p, Polynomial& q){
+    p.add(q);
+    return p;
+  }
+
+  //subtraction
+  void Polynomial::subtract(const Polynomial& q){
+    Polynomial other = q;
+    int min_degree =  std::min(this->max_degree, other.max_degree);
+
+    for (int i=0; i<=min_degree; i++){
+      this->setMember(i, this->getMember(i) - other.getMember(i));
+    }
+    this->clean();
+  }
+  Polynomial operator-(const Polynomial& p, const Polynomial& q){
     Polynomial res = p;
+    res.subtract(q);
     return res;
+  }
+
+  //multiplication
+  void Polynomial::multiply(const Polynomial& q){
+    Polynomial res = *this;
+    
   }
 }
