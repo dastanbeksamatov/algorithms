@@ -16,8 +16,10 @@ namespace PolyOperations{
     // constructor with given coefficients and degrees
     Polynomial(std::vector<double> coefs);
 
+    Polynomial(const Polynomial& q);
+
     // initialize polynomial operations that will override basic arithmetical operators
-    friend Polynomial operator + (Polynomial p, Polynomial& q);
+    friend Polynomial operator + (const Polynomial p, const Polynomial& q);
     friend Polynomial operator - (const Polynomial& p, const Polynomial& q);
     friend Polynomial operator / (const Polynomial& p, const Polynomial& q);
     friend Polynomial operator * (const Polynomial& p, const Polynomial& q);
@@ -39,8 +41,9 @@ namespace PolyOperations{
     friend std::ostream& operator <<(std::ostream &out, const Polynomial& p);
 
     // arithmetical methods
-    void add(Polynomial& q);
+    void add(const Polynomial& q);
     void subtract(const Polynomial& q);
+    // returns dividend, quotient, divisor and remainder in a vector
     std::vector<Polynomial> divide(const Polynomial& q);
     void multiply(const Polynomial& q);
 

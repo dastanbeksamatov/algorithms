@@ -9,11 +9,13 @@ using namespace PolyOperations;
 using namespace std;
 
 int main(){
-  vector<double> p = { 2, 3, 3, 1 }; vector<double> q = { 0, -4, 3, 3 }; vector<double> r = { 1, 0, 0, 0 }; vector<double> d = { 1, 1 };
+  vector<double> p = { 2, 3, 3, 1 }; vector<double> q = { 0, -4, 3, 3 }; vector<double> r = { 1, 0, 0, 0 }; vector<double> d = { 1, 2, 1 };
 
   Polynomial poly_p(p);
   Polynomial poly_q(q);
+  Polynomial poly_r(r);
   Polynomial div(d);
+  cout<<"good till here"<<endl;
   cout<<"Test for the class: "<<endl;
   cout<<"Class initialization works "<< poly_q <<endl;
   poly_p.clean();
@@ -21,15 +23,16 @@ int main(){
   cout<<"getMember() works"<<endl;
   cout<<"---------------"<<endl;
   cout<<"test addition: \n ("<<poly_p<<") \n + ("<<poly_q<<")\n ========== \n";
-  cout<<poly_p+poly_q<<endl;
+  poly_r.add(poly_q);
+  cout<<poly_r<<endl;
   cout<<"-----------"<<"\n"<<"test subtraction\n";
   cout<<poly_p<<" - "<<poly_q<<endl;
   cout<<poly_p-poly_q<<endl;
-
+  Polynomial product(poly_p*poly_q);
   cout<<"Test multiplication: "<<endl;
-  cout<<poly_p<<endl;
+  cout<<product<<endl;
   cout<<"Test multiplication: "<<endl;
-  vector<Polynomial> result = poly_p.divide(div);
-  cout<<result[0]<<" = ("<<result[1]<<")*("<<result[2]<<") + "<<result[3]<<endl;
+  vector<Polynomial> result = product.divide(poly_q);
+  //cout<<result[0]<<" = ("<<")*("<<") + "<<endl;
   return 0;
 }
