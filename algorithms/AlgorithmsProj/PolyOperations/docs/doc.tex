@@ -1,0 +1,137 @@
+\documentclass{article}
+
+% If you're new to LaTeX, here's some short tutorials:
+% https://www.overleaf.com/learn/latex/Learn_LaTeX_in_30_minutes
+% https://en.wikibooks.org/wiki/LaTeX/Basics
+
+% Formatting
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage[titletoc,title]{appendix}
+
+% Math
+% https://www.overleaf.com/learn/latex/Mathematical_expressions
+% https://en.wikibooks.org/wiki/LaTeX/Mathematics
+\usepackage{amsmath,amsfonts,amssymb,mathtools}
+\usepackage{dirtree}
+% Algorithms
+% https://www.overleaf.com/learn/latex/algorithms
+% https://en.wikibooks.org/wiki/LaTeX/Algorithms
+\usepackage[ruled,vlined]{algorithm2e}
+\usepackage{algorithmic}
+% References
+% https://www.overleaf.com/learn/latex/Bibliography_management_in_LaTeX
+% https://en.wikibooks.org/wiki/LaTeX/Bibliography_Management
+\usepackage{biblatex}
+\addbibresource{references.bib}
+
+% Title content
+\title{COS 460a Quiz 2}
+\author{Dastanbek Samatov}
+\date{April 21, 2020}
+
+\begin{document}
+
+\maketitle
+
+% Abstract
+\begin{abstract}
+    Implement a library for arithmetic operations with Polynomials in C++.
+\end{abstract}
+
+% Introduction and Overview
+\section{Introduction and Overview}
+
+The library consists of a class Polynomial with its respective arithmetic methods and
+other overloaded built-in operators, such as comparison operators, assignment, 
+increment and decrementation operators. Polynomials are stored in a \textbf{map}, where
+key is the power and value is the coefficient of respective member of the Polynomial.
+For example, a polynomial p 
+\begin{equation}
+    p = x^4 + 3x^3 - 2x^2 + 3 
+\end{equation}
+is assigned to the following map: \textbf{[ [0, 3], [1, -2], [2, 3], [3, 1] ]}
+
+Overview of the file structure:
+\dirtree{%
+.1 /.
+.2 doc.
+.3 doc.pdf.
+.2 main.cpp.
+.2 PolyOperations.cpp.
+.2 PolyOperations.h.
+.2 test.txt.
+.2 tests.cpp.
+}
+% Example Subsection
+\subsection{Constructors}
+\textbf{Polynomial} class has four types of constructors: \textbf{default, constructor from 
+vector, constructor from map and constructor from another instance of the class.}
+
+% Example Subsubsection
+\subsection{Arithmetical Operations}
+An instance of \textbf{Polynomial} class has add, subtract, multiply, divide methods along
+with several utility functions. Along with these methods, native arithmetic 
+operators (+, -, *, /) are also overloaded for the Polynomial class.
+
+%  Theoretical Background
+\section{Theoretical Background}
+
+Algorithm for adding and subtracting Polynomials is rather trivial. Multiplication is 
+slightly more complicated but it also doesn't deserve specific mention. Some other
+problems I had was zero coefficients after arithmetical operations. So I implemented
+a methods which finds those coefficients and erases them from the map of the object. 
+
+Another objective was to deal with the Null Polynomial which resulted from the arithmetic
+operations, since in the clean() method I was iterating through the elements of map,
+it was essential to handle the iterator so that the next node is not empty. Otherwise,
+the program would give Segmentation Fault.
+% Algorithm Implementation and Development
+\newpage
+\section{Algorithm Implementation and Development}
+Following is the Pseudocode on which I based the implentation of division of polynomials.
+Worst time complexity is O($n^2$) and the best is O(1). It receives dividen and divisor
+as an argument and return a vector of maps with quotient and remainder.
+
+
+\begin{algorithm}[H]
+    \SetAlgoLined
+    \KwResult{returns (q, r) }
+    \If{degreeD smaller than 0 }{
+        error
+    }
+
+     q = 0\;
+     \While{degreeN greater or equal to degreeD}{
+      d = D (shifted by degreeN-degreeD)\;
+      q(degreeN-degreeD) = N(degreeN)/d(degreeD)\;
+      d = d * q(degreeN - degreeD)\;
+      N = N - d\;
+     }
+     r = N\;
+     return (q,r)\;
+     \caption{Polynomial Long Division Pseudocode}
+    \end{algorithm}
+% Summary and Conclusions
+\section{Conclusions}
+The code is well-documneted, with necessary comments and structure. When
+writing the algorithms I used mainly Wikipedia and GeekForGeeks website
+for research. Most of the methods of C++, such as assignment, comparison, incrementation
+operators are overloaded for the convenience of computing polynomials.
+
+\section{References}
+\begin{thebibliography}{2}
+    \bibitem{RoseettaCode}
+    $Polynomial long division (n.d.). Retrieved from https://rosettacode.org/wiki/Polynomial_long_division$
+    \bibitem{Wikipedia}
+    $Polynomial. (2020, April 13). Retrieved from https://en.wikipedia.org/wiki/Polynomial
+    $
+    \bibitem{Long Division}
+    $Polynomial long division. (2020, January 14). Retrieved from https://en.wikipedia.org/wiki/Polynomial_long_division$
+\end{thebibliography}
+
+% Appendices
+\begin{appendices}
+\end{appendices}
+
+\end{document}
