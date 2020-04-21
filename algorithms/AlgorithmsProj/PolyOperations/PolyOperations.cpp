@@ -9,33 +9,75 @@
 using namespace PolyOperations;
 
 namespace PolyOperations{
-  //function used to clean polynomials 
-  void Polynomial::clean(){
-    if (this->isNull()){
-      this->setMember(0,0);
-      this->max_degree = -1;
-     }
-    auto p = this->coeffs_.cbegin();
-    while(p != this->coeffs_.cend()){
-      if(fabs(p->second) < 1e-9){
-        this->coeffs_.erase(p++);
-      }
-      else{
-        ++p;
-      }
+
+  // Constructors
+  Polynomial::Polynomial(){
+    this->coeffs_ = {};
+    this->max_degree = 0;
+  };
+  // construct from vector
+  Polynomial::Polynomial(std::vector<double> coefs){
+    for (size_t i = 0; i<coefs.size(); i++){
+      this->coeffs_[i] = coefs[i];
     }
     this->max_degree = this->coeffs_.crbegin()->first;
+    this->clean();
+  }
+  // construct from another polynomial
+  Polynomial::Polynomial(const Polynomial& q){
+    this->coeffs_ = q.coeffs_;
+    this->clean();
+    max_degree = this->coeffs_.crbegin()->first;
+  }
+  // construct from map with degrees and coefficients as keys and values, respectively
+  Polynomial::Polynomial(std::map<int, double> coef){
+    this->coeffs_ = coef;
+    this->clean();
+  }
+
+  //function used to remove zero coefficients from the map
+  void Polynomial::clean(){
+    std::map<int, double> temp = this->coeffs_;
+    // if the map has all values zero, then it's a null polynomial
+    bool empty = true; 
+    auto i = this->coeffs_.cbegin();
+    while(i!=this->coeffs_.cend()){ // this loop checks whether the map is null map
+      if (i->second != 0){
+        empty = false;
+      }
+      ++i;
+    }
+    // if the map is empty, it assigns 0 to 0 index of map, and its degree is also zero
+    if(empty){
+      std::map<int, double> def;
+      def[0] = 0;
+      this->coeffs_ = def;
+      this->max_degree = 0;
+    }
+    // in any other case, it proceeds to remove elements with zero coefficient
+    else{
+      auto p = temp.cbegin();
+      while(p != temp.cend()){
+        if(p->second == 0 ){
+            p = temp.erase(p);
+        }
+        else{
+          ++p;
+        }
+      }
+      this->coeffs_ = temp;
+      this->max_degree = this->coeffs_.crbegin()->first;
+    }
   }
   // getter and setters 
   void Polynomial::setMember(int index, double newCoef){
     this->coeffs_[index] = newCoef;
-    this->clean();
   }
   //
   int Polynomial::getMember(int index){
     return this->coeffs_.find(index)->second;
   }
-
+  // checks whether map is null
   bool Polynomial::isNull(){
     return (this->max_degree==0 && this->getMember(0)==0);
   }
@@ -44,33 +86,15 @@ namespace PolyOperations{
     return (this->max_degree==0 && this->getMember(0)>0);
   }
 
-  // Constructors
-  Polynomial::Polynomial(){
-    this->coeffs_ = {};
-    this->max_degree = 0;
-  };
-
-  Polynomial::Polynomial(std::vector<double> coefs){
-    for (int i = 0; i<coefs.size(); i++){
-      this->coeffs_[i] = coefs[i];
-    }
-    this->max_degree = this->coeffs_.crbegin()->first;
-    this->clean();
-  }
-  Polynomial::Polynomial(const Polynomial& q){
-    this->coeffs_ = q.coeffs_;
-    this->clean();
-    max_degree = this->coeffs_.crbegin()->first;
-  }
-
+  
   // overloaded operators
+  // overloaded std::cout operator used to display polynomials in pretty form
   std::ostream& operator<<(std::ostream& out, const Polynomial& p){
     // print Polynomial object
-    Polynomial t = p;
+    Polynomial t(p);
     if(t.isNull()){
       return out<<"Null Polynomial";
     }
-    bool firstCoeff = true;
     auto i = p.coeffs_.crbegin();
     std::string sign = "";
     while(i!=p.coeffs_.crend()){
@@ -103,38 +127,52 @@ namespace PolyOperations{
     }
     return out;
   }
-  // assignment operator
+  // assignment operator for polynomial
   void Polynomial::operator=(const Polynomial& q){
     this->coeffs_ = q.coeffs_;
     this->clean();
   }
-  // addition
+
   void Polynomial::add(const Polynomial& q){
-    Polynomial poly = q;
+    Polynomial poly(q);
     int max_degree = std::max(this->max_degree, poly.max_degree);
     for(int i=0; i<=max_degree; i++){
       this->setMember(i, this->getMember(i)+poly.getMember(i));
     }
     this->clean();
   }
+    // addition overloaded
   Polynomial operator+(const Polynomial& p, const Polynomial& q){
-    Polynomial res = p;
+    Polynomial res(p);
+    res.add(q);
+    return res;
+  }
+
+  Polynomial operator +=(const Polynomial& p, const Polynomial& q){
+    Polynomial res(p);
+    res.add(p);
     res.add(q);
     return res;
   }
 
   //subtraction
   void Polynomial::subtract(const Polynomial& q){
-    Polynomial other = q;
+    Polynomial other(q);
     int max_degree =  std::max(this->max_degree, other.max_degree);
-
     for (int i=0; i<=max_degree; i++){
       this->setMember(i, this->getMember(i) - other.getMember(i));
     }
     this->clean();
   }
   Polynomial operator-(const Polynomial& p, const Polynomial& q){
-    Polynomial res = p;
+    Polynomial res(p);
+    res.subtract(q);
+    return res;
+  }
+    // decrementation overladed
+  Polynomial operator -= (const Polynomial& p, const Polynomial& q){
+    Polynomial res(p);
+    res.subtract(p);
     res.subtract(q);
     return res;
   }
@@ -142,8 +180,8 @@ namespace PolyOperations{
 
   //multiplication
   void Polynomial::multiply(const Polynomial& q){
-    Polynomial poly = q;
-    Polynomial result;
+    Polynomial poly(q);
+    std::map<int, double> result;
     // if the Polynomial is null polynomial, the product is zero
     if(poly.isNull()){
       // assign Polynomial to Null polynomial
@@ -161,60 +199,90 @@ namespace PolyOperations{
     else{
       for(int i = 0; i <= this->max_degree; i++){
         for(int k = 0; k<= poly.max_degree; k++){
-          result.coeffs_[i+k] += this->coeffs_[i]*poly.coeffs_[k];
+          result[i+k] += this->coeffs_[i]*poly.coeffs_[k];
         }
       }
-      this->coeffs_ = result.coeffs_;
+      this->coeffs_ = result;
     }
     this->clean();
-    for (int i = 0; i<result.coeffs_.size(); ++i){
-      this->setMember(i, result.coeffs_.at(i));
+    for (size_t i = 0; i<result.size(); ++i){
+      this->setMember(i, result.at(i));
     }
   }
 
   Polynomial operator*(const Polynomial& p, const Polynomial& q){
-    Polynomial res = p;
+    Polynomial res(p);
     res.multiply(q);
     return res;
   }
 
-  // long division, returns vector with dividend and remainder
+  Polynomial operator *=(const Polynomial& p, const Polynomial& q){
+    Polynomial res(p);
+    res.add(p*q);
+    return res;
+  }
 
-  std::vector<Polynomial> Polynomial::divide(const Polynomial& q){
-    Polynomial divisor = q;
+  // long division, returns vector with quotient and remainder
+
+  std::vector<std::map<int, double>> Polynomial::divide(const Polynomial& q){
+    Polynomial divisor(q);
     if(divisor.isNull() || this->max_degree<divisor.max_degree){
-      std::cout<<"this true"<<std::endl;
       return {};
     }
     else{
-      std::cout<<"passes till here 0"<<std::endl;
-      Polynomial quotient;
-      Polynomial remainder = *this;
+      std::map<int, double> quotient;
+      // remainder is a dividend in the beggining
+      Polynomial remainder(*this);
+      // degree and leading coefficient of divisor is constant
       int div_degree = divisor.max_degree;
-      std::cout<<"passes till here"<<quotient<<std::endl;
-      while(!remainder.isNull() && remainder.max_degree>=div_degree){
+      int lead_div = divisor.coeffs_.crbegin()->second;
+      // run until remainder is null and remainder has degree less than divisor
+      while(remainder.max_degree>=div_degree){
+        // current power
         int cur_pow = remainder.max_degree - div_degree;
-        if (quotient.max_degree > cur_pow){
+        // leading coefficient of remainder
+        double last = remainder.coeffs_.crbegin()->second;
+        std::map<int, double> temp;
+        // make a temporary quotient
+        temp[cur_pow] = last/lead_div;
+        quotient[cur_pow] = last/lead_div;
+        Polynomial tempP(temp);
+        remainder = remainder- divisor*tempP;
+        if(remainder.max_degree < div_degree){
           break;
         }
-        std::cout<<"passes till here 2"<<std::endl;
-        double last = remainder.coeffs_.crbegin()->second;
-        double lead_div = divisor.coeffs_.crbegin()->first;
-        std::cout<<"remainder's last coef: "<<last<<std::endl;
-        Polynomial temp;
-        temp.setMember(cur_pow, last);
-        quotient.add(temp);
-        remainder = remainder - divisor*temp;
-        remainder.clean();
-        std::cout<<remainder.max_degree<<std::endl;
-        temp.setMember(cur_pow, 0);
       }
-    std::vector<Polynomial> result;
-    result.push_back(*this);
-    result.push_back(quotient);
-    result.push_back(divisor);
-    result.push_back(remainder);
+    std::map<int, double> rem = remainder.coeffs_;
+    std::vector<std::map<int, double>> result = {quotient, rem};
     return result;
     }
   }
+  // overloaded / operator
+  std::vector<std::map<int, double>> operator / (const Polynomial& p, const Polynomial& q){
+    Polynomial res(q);
+    std::vector<std::map<int, double>> result = res.divide(q);
+    return result;
+  }
+
+  // Boolean operators overloaded
+  bool operator == (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ == q.coeffs_;
+  }
+  bool operator > (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ > q.coeffs_;
+  }
+  bool operator >= (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ >= q.coeffs_;
+  }
+  bool operator < (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ < q.coeffs_;
+  }
+  bool operator <= (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ <= q.coeffs_;
+  }
+  bool operator != (const Polynomial& p, const Polynomial& q){
+    return p.coeffs_ != q.coeffs_;
+  }
+
+
 }
