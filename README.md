@@ -3,4 +3,4 @@
 2. Implementation of algorithms in Geometry
  
  ### Note:
- It will be filled with solutions to problems in **Cracking the Coding Interview: 189 questions** book from time to time.
+ This repo will be filled with solutions to problems in **Cracking the Coding Interview: 189 questions** book from time to time.
